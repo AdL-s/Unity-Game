@@ -28,6 +28,7 @@ public class EnemyBasic : MonoBehaviour
 
     private void Death()
     {
+       
         Destroy(gameObject);    
     }
 }

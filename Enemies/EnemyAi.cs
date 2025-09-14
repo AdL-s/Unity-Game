@@ -15,6 +15,7 @@ public class EnemyAi : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+
         enemy.transform.position = Vector3.MoveTowards(enemy.transform.position, player.transform.position, travelSpeed);
         
     }
