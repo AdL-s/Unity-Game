@@ -5,21 +5,26 @@ using UnityEngine;
 using UnityEngine.AI;
 
 [RequireComponent(typeof(NavMeshAgent))]
-public class MelleeAI : MonoBehaviour
+public class BetterAI : MonoBehaviour
 {
-    public Transform Target;
-    public float ADistance;
-    public Collider AttackCol;
+    public float ADistance;//Distance from player
+    private float m_Distance;// Distance of melee attack
+    [Range(1, 10)] public int LM = 6; //Level of layerMask the collider should react to
+    public float shotDistance;// Distance of shooting(when the ai starts shooting)
 
-    private NavMeshAgent mAgent;
-    private float m_Distance;
-    [Range(1, 10)] public int LM = 6;
+    public Transform Target; // Player
+    public Collider AttackCol; //Trigger of the attack / collider
+
+    private NavMeshAgent mAgent; //The enemy model
 
     private bool isAttacking = false;
 
+    [SerializeField] public GameObject bullet;
+    [SerializeField] public Transform muzzlePoint;//where the bullets come from
+
     private Renderer triggerRend;
-    private Color originalColor;
-    private Color triggerColor = new Color(0, 0, 1, 0.5f);
+    private Color originalColor; //Color of trigger
+    private Color triggerColor = new Color(0, 0, 1, 0.5f); // Color of triggered trigger
 
 
 
@@ -42,15 +47,30 @@ public class MelleeAI : MonoBehaviour
 
         m_Distance = Vector3.Distance(mAgent.transform.position, Target.position);
 
-        if (m_Distance < ADistance && !isAttacking)
+        if (m_Distance > shotDistance)
         {
-            StartCoroutine(Delay());
+            mAgent.velocity = Vector3.zero;
+            mAgent.updateRotation = true;
+            GameObject newBullet = Instantiate(bullet, muzzlePoint.position, muzzlePoint.rotation); // need to fix this (this in an update is not a great idea)
+            newBullet.transform.forward = muzzlePoint.forward;
+
         }
-        else if (!isAttacking)
+        else
         {
-            mAgent.isStopped = false;
-            mAgent.destination = Target.position;
+            mAgent.updatePosition = true;
+
+            if (m_Distance < ADistance && !isAttacking)
+            {
+                StartCoroutine(Delay());
+            }
+            else if (!isAttacking)
+            {
+                mAgent.isStopped = false;
+                mAgent.destination = Target.position;
+            }
+
         }
+
     }
 
     private void OnTriggerEnter(Collider other)
