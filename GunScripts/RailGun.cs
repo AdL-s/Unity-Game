@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Data.SqlTypes;
 using UnityEngine;
 
 public class RailGun : MonoBehaviour

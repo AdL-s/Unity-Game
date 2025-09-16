@@ -13,7 +13,7 @@ public class MelleeAI : MonoBehaviour
 
     private NavMeshAgent mAgent;
     private float m_Distance;
-    [Range(1, 10)] public int LM = 6;
+    [Range(1, 11)] public int LM = 11;
 
     private bool isAttacking = false;
 

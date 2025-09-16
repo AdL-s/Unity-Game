@@ -5,21 +5,26 @@ using UnityEngine;
 using UnityEngine.AI;
 
 [RequireComponent(typeof(NavMeshAgent))]
-public class BetterAI : MonoBehaviour
+public class ShootingAI : MonoBehaviour
 {
-    public float ADistance;//Distance from player
-    private float m_Distance;// Distance of melee attack
-    [Range(1, 10)] public int LM = 6; //Level of layerMask the collider should react to
+    public float ADistance;// Distance of melee attack 
+    private float m_Distance; //Distance from player
+
+    [Range(1, 11)] public int LM = 11; //Level of layerMask the collider should react to
     public float shotDistance;// Distance of shooting(when the ai starts shooting)
     public Transform Target; // Player
     public Collider AttackCol; //Trigger of the attack / collider
     public float spawndelay = 10f;
     public float rotationSpeed = 5f; // Speed of rotation when looking at player
+    
     private NavMeshAgent mAgent; //The enemy model
     private bool isAttacking = false;
     private float timer;
+    
+    
     [SerializeField] public GameObject bullet;
     [SerializeField] public Transform muzzlePoint;//where the bullets come from
+    
     private Renderer triggerRend;
     private Color originalColor; //Color of trigger
     private Color triggerColor = new Color(0, 0, 1, 0.5f); // Color of triggered trigger
@@ -52,15 +57,17 @@ public class BetterAI : MonoBehaviour
             LookAtTarget();
 
             if (timer >= spawndelay)
-            {
+            {   
                 GameObject newBullet = Instantiate(bullet, muzzlePoint.position, muzzlePoint.rotation);
+                Projectile projectile = newBullet.GetComponent<Projectile>();
                 newBullet.transform.forward = muzzlePoint.forward;
+                projectile.SetSpeed(m_Distance < 23 ? 50f : m_Distance * 1.25f); // if distance from player is less than 23 than speed of projectile is 50f else distance from player * 1.25
                 timer = 0;
             }
         }
         else
         {
-            mAgent.isStopped = false;
+           
             mAgent.updateRotation = true; // Re-enable NavMeshAgent rotation for movement
 
             if (m_Distance < ADistance && !isAttacking)
@@ -123,7 +130,7 @@ public class BetterAI : MonoBehaviour
 
     private void OnDisable()
     {
-
+        triggerRend.material.color = originalColor;
     }
 
     private IEnumerator Delay()
