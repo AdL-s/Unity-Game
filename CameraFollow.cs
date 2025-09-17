@@ -16,13 +16,13 @@ public class CameraFollow : MonoBehaviour
     {
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+        targetRb.interpolation = RigidbodyInterpolation.Interpolate; // smooth physics
     }
 
     private void LateUpdate()
     {
         if (targetRb == null) return;
 
-        // Follow player position smoothly
         Vector3 targetPos = targetRb.position;
         transform.position = Vector3.Lerp(transform.position, targetPos, followSmooth * Time.deltaTime);
 
@@ -31,7 +31,6 @@ public class CameraFollow : MonoBehaviour
         verticalY += Input.GetAxis("Mouse Y") * sensitivity;
         verticalY = Mathf.Clamp(verticalY, -90f, 90f);
 
-        // Apply rotation
         transform.rotation = Quaternion.Euler(-verticalY, verticalX, 0f);
     }
 }

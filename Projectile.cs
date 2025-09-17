@@ -24,20 +24,23 @@ public class Projectile : MonoBehaviour
         Destroy(gameObject, timer);
     }
 
-    private void OnCollisionEnter(Collision collision)
+
+    public void OnTriggerEnter(Collider other)
     {
         float travelTime = Time.time - startTime;
         Debug.Log($"Bullet travel time: {travelTime:F2} seconds");
-        if (collision.gameObject.tag == "Player")
+        if (other.gameObject.tag == "Player")
         {
-            
-            PlayerBasic player = collision.gameObject.GetComponent<PlayerBasic>();
+
+            PlayerBasic player = other.gameObject.GetComponent<PlayerBasic>();
             if (player != null) // Add null check for safety
             {
                 player.DamageRecivied(damage);
             }
         }
         Destroy(gameObject);
+
+
     }
     public void SetSpeed(float newSpeed)
     {

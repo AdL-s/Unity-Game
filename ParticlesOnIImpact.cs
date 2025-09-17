@@ -13,17 +13,21 @@ public class ParticlesOnImpact : MonoBehaviour
     public AudioClip ImpactSound;
 
 
-    private void OnCollisionEnter(Collision collision)
+   
+    private void OnTriggerEnter(Collider other)
     {
-        // Spawn particles
-        GameObject particles = Instantiate(Particles, collision.contacts[0].point, Quaternion.identity);
-        particles.transform.forward = collision.contacts[0].normal;
+        Vector3 hitPoint = other.ClosestPoint(transform.position);
+        Vector3 hitNormal = (transform.position - hitPoint).normalized;
 
-        // Play audio at collision point
+        // Spawn particles
+        GameObject particles = Instantiate(Particles, hitPoint, Quaternion.identity);
+        particles.transform.forward = hitNormal;
+
+        // Play audio at hit point
         if (ImpactSound != null)
         {
             GameObject tempAudio = new GameObject("TempAudio");
-            tempAudio.transform.position = collision.contacts[0].point;
+            tempAudio.transform.position = hitPoint;
             AudioSource source = tempAudio.AddComponent<AudioSource>();
             source.clip = ImpactSound;
             source.spatialBlend = spatialBlend; // 3D sound
