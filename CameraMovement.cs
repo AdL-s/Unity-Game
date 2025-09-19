@@ -26,22 +26,33 @@ public class CameraMovement : MonoBehaviour
     [Header("Movement Smoothing")]
     public float acceleration = 12f;
     public float deceleration = 15f;
-    public float airControl = 0.4f;
+    public float airControl = 0.7f;
     private Vector3 moveInput = Vector3.zero;
     private Vector3 currentVelocity = Vector3.zero;
 
     [Header("Jump")]
     public float secondJumpMultForce = 1.25f;
     public float jumpForce = 50;
+    public float doubleJumpDelay = 0.3f;
+
+    private float lastJumpTime = 0f;
+
+    [Header("Jump Momentum")]
+    public float momentumMultiplier = 0.3f;  // How much speed affects jump
+    public float maxMomentumBonus = 20f;     // Max bonus jump force
+    public float jumpAngle = 0.3f;           // How much forward vs up (0 = straight up, 1 = 45 degrees)
 
     [Header("Gravity")]
-    public float gravityAcce = 0;
+    public float gravityAcce = 15;
     private float gravityModifier = 1;
     private float airTimer = 0f;
+    public float baseGravity = 15f;        // Initial gravity force
+    public float maxGravity = 35f;         // Maximum gravity force
+    public float gravityBuildupTime = 1f;  // Time to reach max gravity
+    public float gravityMultiplier = 1f;   // Overall gravity modifier
+    
+    [Header("AirCounterMov")]
     private float airCounter = 0.015f;
-
-    [Header("Wall Detection")]
-    public float wallCheckDistance = 0.6f;
 
     [Header("Slide")]
     public float slideStarter = 0.8f; //what percantage of max velocity you can start slide 
@@ -59,11 +70,6 @@ public class CameraMovement : MonoBehaviour
     public Collider crouchingCollider;
     public Collider standingCollider;
 
-    private bool invokeUncrouch = false;
-    private float timer = 0;
-
-    private bool doubleJump = true;
-    private bool forceJump = false;
 
     [Header("Camera FOVS")]
     public float normalFOV = 60f;       // Default FOV
@@ -86,6 +92,12 @@ public class CameraMovement : MonoBehaviour
     public float dashCooldown = 0.8f;    // time before you can dash again
     private float lastDashTime = -Mathf.Infinity;
     private bool isDashing = false;
+   
+    private bool invokeUncrouch = false;
+    private float timer = 0;
+
+    private bool doubleJump = true;
+    private bool forceJump = false;
 
     private VFXPlayer vfxPlayer;
 
@@ -110,7 +122,7 @@ public class CameraMovement : MonoBehaviour
             a = Input.GetKey(KeyCode.A);
             s = Input.GetKey(KeyCode.S);
             d = Input.GetKey(KeyCode.D);
-            jump = Input.GetKeyDown(KeyCode.Space);
+            jump = Input.GetKey(KeyCode.Space);
             crouch = Input.GetKeyDown(KeyCode.LeftControl);
             crouchUp = Input.GetKeyUp(KeyCode.LeftControl);
             dash = Input.GetKeyDown(KeyCode.LeftShift);
@@ -137,7 +149,6 @@ public class CameraMovement : MonoBehaviour
         // Cache input for FixedUpdate
         cachedInput.Cache();
 
-        // Keep non-physics updates here
         UpdateByStateNonPhysics();
         UpdateFOV();
         AirTimer();
@@ -164,7 +175,7 @@ public class CameraMovement : MonoBehaviour
 
     private void Jump()
     {
-        Debug.Log("Called");
+       
         if (state == PlayerStates.InAir && !doubleJump)
         {
             StartCoroutine(ForcedJump());
@@ -175,40 +186,53 @@ public class CameraMovement : MonoBehaviour
         {
             if (GetDistanceFromRoof() > 1.12f && state != PlayerStates.InAir && state != PlayerStates.Dashing)
             {
-                Debug.Log("Jump");
-                // Store current horizontal velocity
+
+                // Get current horizontal velocity
                 Vector3 horizontalVelocity = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z);
+                float horizontalSpeed = horizontalVelocity.magnitude;
 
-                // Apply jump force (vertical only)
+                // Calculate jump direction (up + forward momentum)
+                Vector3 jumpDirection = Vector3.up;
+                if (horizontalSpeed > 0.1f)
+                {
+                    // Add forward component based on movement direction
+                    jumpDirection += horizontalVelocity.normalized * 0.3f;
+                    jumpDirection = jumpDirection.normalized;
+                }
+
+                // Apply jump with momentum (no speed bonus)
                 rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z);
-                rb.AddForce(Vector3.up * jumpForce, ForceMode.VelocityChange);
-
-                // Maintain horizontal momentum
-                rb.AddForce(horizontalVelocity.normalized * (jumpForce * 0.3f), ForceMode.VelocityChange);
+                rb.AddForce(jumpDirection * jumpForce, ForceMode.VelocityChange);
 
                 vfxPlayer.PlayParticles();
+                lastJumpTime = Time.time; // Record jump time
                 forceJump = false;
             }
-            else if (state == PlayerStates.InAir && GetDistanceFromRoof() > 1.12f)
+            else if (state == PlayerStates.InAir && GetDistanceFromRoof() > 1.12f && doubleJump && cachedInput.jump) 
             {
-                if (doubleJump)
-                {
-                    airCounter = 0;
-                    airTimer = 0;
+        
+                    if (Time.time - lastJumpTime >= doubleJumpDelay)
+                    {
+                        airCounter = 0;
+                        airTimer = 0;
 
-                    // Store current horizontal velocity
-                    Vector3 horizontalVelocity = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z);
+                        Vector3 horizontalVelocity = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z);
+                        float horizontalSpeed = horizontalVelocity.magnitude;
 
-                    // Apply double jump force (vertical only)
-                    rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z);
-                    rb.AddForce(Vector3.up * jumpForce * secondJumpMultForce, ForceMode.VelocityChange);
+                        Vector3 jumpDirection = Vector3.up;
+                        if (horizontalSpeed > 0.1f)
+                        {
+                            jumpDirection += horizontalVelocity.normalized * 0.25f;
+                            jumpDirection = jumpDirection.normalized;
+                        }
 
-                    // Maintain horizontal momentum
-                    rb.AddForce(horizontalVelocity.normalized * (jumpForce * 0.3f * secondJumpMultForce), ForceMode.VelocityChange);
+                        rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z);
+                        rb.AddForce(jumpDirection * (jumpForce * secondJumpMultForce), ForceMode.VelocityChange);
 
-                    doubleJump = false;
-                    airCounter = 0.015f;
-                }
+                        doubleJump = false;
+                        airCounter = 0.015f;
+                    }
+                
             }
         }
     }
@@ -217,7 +241,7 @@ public class CameraMovement : MonoBehaviour
     {
         if (TryUseAbility())
         {
-            rb.AddForce(rb.linearVelocity.normalized * slideForce * 0.7f, ForceMode.VelocityChange); // Reduced slide force
+            rb.AddForce(rb.linearVelocity.normalized * slideForce * 0.7f, ForceMode.VelocityChange);
             SwitchState(PlayerStates.Sliding);
         }
         else
@@ -314,8 +338,8 @@ public class CameraMovement : MonoBehaviour
         moveDirection = direction;
 
         // Calculate target velocity
-        float controlFactor = (state == PlayerStates.InAir) ? airControl : 1f;
-        Vector3 targetVelocity = direction * movementSpeed * mult * speedMultipl * sprintVelocityMultiplier * controlFactor;
+        
+        Vector3 targetVelocity = direction * movementSpeed * mult * speedMultipl * sprintVelocityMultiplier;
 
         // Apply acceleration/deceleration
         if (direction.magnitude > 0.1f)
@@ -336,7 +360,7 @@ public class CameraMovement : MonoBehaviour
 
     private void Counter(float modifier)
     {
-        // Only counter movement if not providing input
+       
         if (moveDirection.magnitude < 0.1f)
         {
             Vector3 counterForce = new Vector3(-rb.linearVelocity.x, 0, -rb.linearVelocity.z) * modifier * (movementSpeed * 0.2f);
@@ -430,7 +454,7 @@ public class CameraMovement : MonoBehaviour
                 break;
             case PlayerStates.InAir:
                 SetColliderToGround();
-                maxVelocity = defaultMaxMovement * 1.5f;
+                maxVelocity = defaultMaxMovement * 3f;
                 targetFOV = normalFOV;
                 break;
             case PlayerStates.Crouching:
@@ -483,7 +507,6 @@ public class CameraMovement : MonoBehaviour
         }
     }
 
-    // Split UpdateByState into physics and non-physics parts
     public void UpdateByStatePhysics()
     {
         switch (state)
@@ -496,15 +519,15 @@ public class CameraMovement : MonoBehaviour
                 break;
 
             case PlayerStates.InAir:
-                Movement(defaultMovement * 0.5f);
+                Movement(defaultMovement);
                 CheckForGround();
                 Jump();
-                Counter(airCounter * 1.25f);
+                Counter(airCounter);
                 Gravity();
                 break;
 
             case PlayerStates.Crouching:
-                Movement(defaultMovement);
+                Movement(defaultMovement/0.5f);
                 Counter(defaultCounterMaxMovement);
                 Jump();
                 CheckForAir();
@@ -606,8 +629,20 @@ public class CameraMovement : MonoBehaviour
 
     private void Gravity()
     {
-        Vector3 force = new Vector3(0, -gravityAcce * AirTimer() * rb.mass * gravityModifier, 0);
-        rb.AddForce(force);
+        if (state != PlayerStates.InAir) return;
+
+        // Calculate gravity progression (0 to 1)
+        float gravityProgress = Mathf.Clamp01(airTimer / gravityBuildupTime);
+
+        // Smooth curve
+        float smoothProgress = Mathf.SmoothStep(0f, 1f, gravityProgress);
+
+        // Calculate current gravity force
+        float currentGravity = Mathf.Lerp(baseGravity, maxGravity, smoothProgress);
+
+        // Apply
+        Vector3 gravityForce = Vector3.down * currentGravity * rb.mass * gravityMultiplier;
+        rb.AddForce(gravityForce);
     }
 
     private void CheckDash()
@@ -646,7 +681,6 @@ public class CameraMovement : MonoBehaviour
             inputDir = moveDirection.normalized;
         }
 
-        // Apply dash force with more control
         rb.AddForce(inputDir.normalized * dashForce * 0.5f, ForceMode.VelocityChange);
 
         float t = 0f;
