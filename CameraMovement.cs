@@ -20,7 +20,7 @@ public class CameraMovement : MonoBehaviour
 
     [Header("Speed")]
     public float speedMultipl = 1;
-    public float movementSpeed = 8f; // Reduced from 1 to prevent excessive speed
+    public float movementSpeed = 8f; 
     public float maxVelocity = 2;
 
     [Header("Movement Smoothing")]
@@ -381,8 +381,17 @@ public class CameraMovement : MonoBehaviour
     {
         if (GetDistanceFromGround() < 1.12f)
         {
-            SwitchState(PlayerStates.OnGround);
-            grounded = true;
+            if (!crouchingCollider.enabled)
+            {
+                SwitchState(PlayerStates.OnGround);
+            }
+            else 
+            {
+                Slide();
+            }
+            
+
+                grounded = true;
             doubleJump = true;
         }
     }
@@ -446,10 +455,10 @@ public class CameraMovement : MonoBehaviour
         switch (state)
         {
             case PlayerStates.OnGround:
-                SetColliderToGround();
-                maxVelocity = defaultMaxMovement;
                 invokeUncrouch = false;
+                maxVelocity = defaultMaxMovement;
                 doubleJump = true;
+                SetColliderToGround();
                 targetFOV = normalFOV;
                 break;
             case PlayerStates.InAir:
@@ -501,7 +510,7 @@ public class CameraMovement : MonoBehaviour
 
     private void CheckForAirUnCrouch()
     {
-        if (Input.GetKeyUp(KeyCode.RightControl))
+        if (Input.GetKeyUp(KeyCode.LeftControl))
         {
             SetColliderToGround();
         }
@@ -527,7 +536,7 @@ public class CameraMovement : MonoBehaviour
                 break;
 
             case PlayerStates.Crouching:
-                Movement(defaultMovement/0.5f);
+                Movement(defaultMovement*0.5f);
                 Counter(defaultCounterMaxMovement);
                 Jump();
                 CheckForAir();
