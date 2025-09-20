@@ -1,6 +1,8 @@
-using UnityEngine;
 using System;
 using System.Collections;
+using Unity.VisualScripting;
+using UnityEngine;
+using static UnityEditorInternal.VersionControl.ListControl;
 
 public class CameraMovement : MonoBehaviour
 {
@@ -448,8 +450,19 @@ public class CameraMovement : MonoBehaviour
         {
             return;
         }
-
         PlayerStates oldState = state;
+
+        switch (oldState)
+        {
+            case PlayerStates.Dashing:
+                vfxPlayer.StopDashingPS();
+                break;
+            case PlayerStates.Sliding:
+                vfxPlayer.StopSlidingParticles();
+                break;
+        }
+
+
         state = newState;
 
         switch (state)
@@ -525,7 +538,7 @@ public class CameraMovement : MonoBehaviour
                 Counter(defaultCounterMaxMovement);
                 Jump();
                 CheckForAir();
-                break;
+            break;
 
             case PlayerStates.InAir:
                 Movement(defaultMovement);
@@ -533,20 +546,20 @@ public class CameraMovement : MonoBehaviour
                 Jump();
                 Counter(airCounter);
                 Gravity();
-                break;
+            break;
 
             case PlayerStates.Crouching:
                 Movement(defaultMovement*0.5f);
                 Counter(defaultCounterMaxMovement);
                 Jump();
                 CheckForAir();
-                break;
+            break;
 
             case PlayerStates.Sliding:
                 Jump();
                 CheckForAir();
                 Counter(timer * slideCounter);
-                break;
+            break;
         }
     }
 
@@ -560,27 +573,28 @@ public class CameraMovement : MonoBehaviour
                 {
                     CheckForCrouch();
                 }
-                StopSlidingVFX();
                 CheckDash();
                 break;
             case PlayerStates.InAir:
                 LookAround();
                 CheckAirCrouch();
                 CheckForAirUnCrouch();
-                StopSlidingVFX();
                 CheckDash();
                 break;
             case PlayerStates.Crouching:
                 LookAround();
                 CheckForUnCrouch();
-                StopSlidingVFX();
                 break;
             case PlayerStates.Sliding:
                 timer += Time.deltaTime;
-                SlidingVFX();
+                vfxPlayer.SlidingParticles();
                 LookAround();
                 CheckForUnCrouch();
                 SlideCancel();
+                break;
+            case PlayerStates.Dashing:
+                vfxPlayer.PlayDashingPS();
+                
                 break;
         }
     }
@@ -600,16 +614,6 @@ public class CameraMovement : MonoBehaviour
         forceJump = true;
         yield return new WaitForSeconds(0.5f);
         forceJump = false;
-    }
-
-    private void SlidingVFX()
-    {
-        vfxPlayer.SlidingParticles();
-    }
-
-    private void StopSlidingVFX()
-    {
-        vfxPlayer.StopSlidingParticles();
     }
 
     public bool TryUseAbility()

@@ -9,6 +9,8 @@ public class VFXPlayer : MonoBehaviour
     private ParticleSystem SlidingPS;
     [SerializeField]
     private ParticleSystem shootingPS;
+    [SerializeField]
+    private ParticleSystem dashingPS;
 
     public void PlayParticles()
     {
@@ -29,6 +31,19 @@ public class VFXPlayer : MonoBehaviour
     public void StopSlidingParticles()
     {
         SlidingPS.Stop(false, ParticleSystemStopBehavior.StopEmitting);
+    }
+
+    public void PlayDashingPS()
+    {
+        dashingPS.Clear();
+        dashingPS.Play();
+        
+    }
+
+    public void StopDashingPS()
+    {
+        Debug.Log("Stopped Playing Dash");
+        dashingPS.Stop(false, ParticleSystemStopBehavior.StopEmitting);
     }
 
 }
