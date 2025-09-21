@@ -42,7 +42,6 @@ public class VFXPlayer : MonoBehaviour
 
     public void StopDashingPS()
     {
-        Debug.Log("Stopped Playing Dash");
         dashingPS.Stop(false, ParticleSystemStopBehavior.StopEmitting);
     }
 

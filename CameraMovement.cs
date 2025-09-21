@@ -1,9 +1,6 @@
 using System;
 using System.Collections;
-using Unity.VisualScripting;
 using UnityEngine;
-using static UnityEditorInternal.VersionControl.ListControl;
-
 public class CameraMovement : MonoBehaviour
 {
     [Header("Constants")]
@@ -244,10 +241,11 @@ public class CameraMovement : MonoBehaviour
         if (TryUseAbility())
         {
             rb.AddForce(rb.linearVelocity.normalized * slideForce * 0.7f, ForceMode.VelocityChange);
+            vfxPlayer.PlayDashingPS();
             SwitchState(PlayerStates.Sliding);
         }
         else
-        {
+        {   
             Crouch();
         }
     }
@@ -354,7 +352,6 @@ public class CameraMovement : MonoBehaviour
             // Decelerate
             currentVelocity = Vector3.Lerp(currentVelocity, Vector3.zero, deceleration * Time.fixedDeltaTime);
         }
-
         // Apply movement
         Vector3 velocityChange = currentVelocity - new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z);
         rb.AddForce(velocityChange, ForceMode.VelocityChange);
@@ -374,7 +371,10 @@ public class CameraMovement : MonoBehaviour
     {
         if (GetDistanceFromGround() > 1.12f)
         {
-            SwitchState(PlayerStates.InAir);
+            if (state != PlayerStates.Dashing)
+            {
+                SwitchState(PlayerStates.InAir);
+            }
             grounded = false;
         }
     }
@@ -393,7 +393,7 @@ public class CameraMovement : MonoBehaviour
             }
             
 
-                grounded = true;
+            grounded = true;
             doubleJump = true;
         }
     }
@@ -450,15 +450,24 @@ public class CameraMovement : MonoBehaviour
         {
             return;
         }
+
+
         PlayerStates oldState = state;
 
         switch (oldState)
         {
             case PlayerStates.Dashing:
-                vfxPlayer.StopDashingPS();
+                
                 break;
             case PlayerStates.Sliding:
+                vfxPlayer.StopDashingPS();
                 vfxPlayer.StopSlidingParticles();
+                break;
+            case PlayerStates.InAir:
+
+                break;
+            case PlayerStates.OnGround:
+
                 break;
         }
 
@@ -593,7 +602,7 @@ public class CameraMovement : MonoBehaviour
                 SlideCancel();
                 break;
             case PlayerStates.Dashing:
-                vfxPlayer.PlayDashingPS();
+                
                 
                 break;
         }
@@ -670,6 +679,8 @@ public class CameraMovement : MonoBehaviour
     {
         isDashing = true;
         lastDashTime = Time.time;
+        SwitchState(PlayerStates.Dashing);
+        vfxPlayer.PlayDashingPS();
 
         float originalDrag = rb.drag;
         float originalGravityModifer = gravityModifier;
@@ -677,7 +688,6 @@ public class CameraMovement : MonoBehaviour
         float h = Input.GetAxisRaw("Horizontal");
         float v = Input.GetAxisRaw("Vertical");
 
-        SwitchState(PlayerStates.Dashing);
         targetFOV = dashFOV;
 
         Vector3 inputDir = (playerCamera.transform.forward * v + playerCamera.transform.right * h);
@@ -701,6 +711,7 @@ public class CameraMovement : MonoBehaviour
         {
             LookAround();
             t += Time.deltaTime;
+            vfxPlayer.StopDashingPS();
             yield return null;
         }
 
