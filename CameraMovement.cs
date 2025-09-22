@@ -19,7 +19,7 @@ public class CameraMovement : MonoBehaviour
 
     [Header("Speed")]
     public float speedMultipl = 1;
-    public float movementSpeed = 8f; 
+    public float movementSpeed = 8f;
     public float maxVelocity = 2;
 
     [Header("Movement Smoothing")]
@@ -49,7 +49,7 @@ public class CameraMovement : MonoBehaviour
     public float maxGravity = 35f;         // Maximum gravity force
     public float gravityBuildupTime = 1f;  // Time to reach max gravity
     public float gravityMultiplier = 1f;   // Overall gravity modifier
-    
+
     [Header("AirCounterMov")]
     private float airCounter = 0.015f;
 
@@ -91,7 +91,7 @@ public class CameraMovement : MonoBehaviour
     public float dashCooldown = 0.8f;    // time before you can dash again
     private float lastDashTime = -Mathf.Infinity;
     private bool isDashing = false;
-   
+
     private bool invokeUncrouch = false;
     private float timer = 0;
 
@@ -131,11 +131,13 @@ public class CameraMovement : MonoBehaviour
 
     private InputCache cachedInput;
 
-    public enum PlayerStates { OnGround = 0, InAir = 1, Crouching = 2, Sliding = 3,  Dashing = 4 };
+    public enum PlayerStates { OnGround = 0, InAir = 1, Crouching = 2, Sliding = 3, Dashing = 4 };
     public PlayerStates state;
 
     private void Start()
     {
+
+      
         ToggleCursor();
         InitializacePlayer();
         vfxPlayer = GetComponent<VFXPlayer>();
@@ -148,6 +150,8 @@ public class CameraMovement : MonoBehaviour
         // Cache input for FixedUpdate
         cachedInput.Cache();
 
+        LookAround();
+        UpdateByStatePhysics();
         UpdateByStateNonPhysics();
         UpdateFOV();
         AirTimer();
@@ -174,7 +178,7 @@ public class CameraMovement : MonoBehaviour
 
     private void Jump()
     {
-       
+
         if (state == PlayerStates.InAir && !doubleJump)
         {
             StartCoroutine(ForcedJump());
@@ -207,31 +211,31 @@ public class CameraMovement : MonoBehaviour
                 lastJumpTime = Time.time; // Record jump time
                 forceJump = false;
             }
-            else if (state == PlayerStates.InAir && GetDistanceFromRoof() > 1.12f && doubleJump && cachedInput.jump) 
+            else if (state == PlayerStates.InAir && GetDistanceFromRoof() > 1.12f && doubleJump && cachedInput.jump)
             {
-        
-                    if (Time.time - lastJumpTime >= doubleJumpDelay)
+
+                if (Time.time - lastJumpTime >= doubleJumpDelay)
+                {
+                    airCounter = 0;
+                    airTimer = 0;
+
+                    Vector3 horizontalVelocity = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z);
+                    float horizontalSpeed = horizontalVelocity.magnitude;
+
+                    Vector3 jumpDirection = Vector3.up;
+                    if (horizontalSpeed > 0.1f)
                     {
-                        airCounter = 0;
-                        airTimer = 0;
-
-                        Vector3 horizontalVelocity = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z);
-                        float horizontalSpeed = horizontalVelocity.magnitude;
-
-                        Vector3 jumpDirection = Vector3.up;
-                        if (horizontalSpeed > 0.1f)
-                        {
-                            jumpDirection += horizontalVelocity.normalized * 0.25f;
-                            jumpDirection = jumpDirection.normalized;
-                        }
-
-                        rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z);
-                        rb.AddForce(jumpDirection * (jumpForce * secondJumpMultForce), ForceMode.VelocityChange);
-
-                        doubleJump = false;
-                        airCounter = 0.015f;
+                        jumpDirection += horizontalVelocity.normalized * 0.25f;
+                        jumpDirection = jumpDirection.normalized;
                     }
-                
+
+                    rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z);
+                    rb.AddForce(jumpDirection * (jumpForce * secondJumpMultForce), ForceMode.VelocityChange);
+
+                    doubleJump = false;
+                    airCounter = 0.015f;
+                }
+
             }
         }
     }
@@ -245,7 +249,7 @@ public class CameraMovement : MonoBehaviour
             SwitchState(PlayerStates.Sliding);
         }
         else
-        {   
+        {
             Crouch();
         }
     }
@@ -338,28 +342,34 @@ public class CameraMovement : MonoBehaviour
         moveDirection = direction;
 
         // Calculate target velocity
-        
         Vector3 targetVelocity = direction * movementSpeed * mult * speedMultipl * sprintVelocityMultiplier;
 
+        // Get current horizontal velocity
+        Vector3 currentHorizontalVelocity = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z);
+
         // Apply acceleration/deceleration
+        Vector3 newVelocity;
         if (direction.magnitude > 0.1f)
         {
-            // Accelerate
-            currentVelocity = Vector3.Lerp(currentVelocity, targetVelocity, acceleration * Time.fixedDeltaTime);
+            // Accelerate toward target velocity
+            newVelocity = Vector3.Lerp(currentHorizontalVelocity, targetVelocity, acceleration * Time.deltaTime);
         }
         else
         {
-            // Decelerate
-            currentVelocity = Vector3.Lerp(currentVelocity, Vector3.zero, deceleration * Time.fixedDeltaTime);
+            // Decelerate toward zero
+            newVelocity = Vector3.Lerp(currentHorizontalVelocity, Vector3.zero, deceleration * Time.deltaTime);
         }
-        // Apply movement
-        Vector3 velocityChange = currentVelocity - new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z);
+
+        // Calculate velocity change needed
+        Vector3 velocityChange = newVelocity - currentHorizontalVelocity;
+
+        // Apply force
         rb.AddForce(velocityChange, ForceMode.VelocityChange);
     }
 
     private void Counter(float modifier)
     {
-       
+
         if (moveDirection.magnitude < 0.1f)
         {
             Vector3 counterForce = new Vector3(-rb.linearVelocity.x, 0, -rb.linearVelocity.z) * modifier * (movementSpeed * 0.2f);
@@ -387,11 +397,11 @@ public class CameraMovement : MonoBehaviour
             {
                 SwitchState(PlayerStates.OnGround);
             }
-            else 
+            else
             {
                 Slide();
             }
-            
+
 
             grounded = true;
             doubleJump = true;
@@ -457,7 +467,7 @@ public class CameraMovement : MonoBehaviour
         switch (oldState)
         {
             case PlayerStates.Dashing:
-                
+
                 break;
             case PlayerStates.Sliding:
                 vfxPlayer.StopDashingPS();
@@ -497,7 +507,7 @@ public class CameraMovement : MonoBehaviour
                 SetColliderToCrouch();
                 timer = 0;
                 targetFOV = slideFOV;
-                break;   
+                break;
             case PlayerStates.Dashing:
                 SetColliderToGround();
                 targetFOV = normalFOV;
@@ -547,7 +557,7 @@ public class CameraMovement : MonoBehaviour
                 Counter(defaultCounterMaxMovement);
                 Jump();
                 CheckForAir();
-            break;
+                break;
 
             case PlayerStates.InAir:
                 Movement(defaultMovement);
@@ -555,20 +565,20 @@ public class CameraMovement : MonoBehaviour
                 Jump();
                 Counter(airCounter);
                 Gravity();
-            break;
+                break;
 
             case PlayerStates.Crouching:
-                Movement(defaultMovement*0.5f);
+                Movement(defaultMovement * 0.5f);
                 Counter(defaultCounterMaxMovement);
                 Jump();
                 CheckForAir();
-            break;
+                break;
 
             case PlayerStates.Sliding:
                 Jump();
                 CheckForAir();
                 Counter(timer * slideCounter);
-            break;
+                break;
         }
     }
 
@@ -577,7 +587,7 @@ public class CameraMovement : MonoBehaviour
         switch (state)
         {
             case PlayerStates.OnGround:
-                LookAround();
+
                 if (!CheckForSlide())
                 {
                     CheckForCrouch();
@@ -585,25 +595,25 @@ public class CameraMovement : MonoBehaviour
                 CheckDash();
                 break;
             case PlayerStates.InAir:
-                LookAround();
+
                 CheckAirCrouch();
                 CheckForAirUnCrouch();
                 CheckDash();
                 break;
             case PlayerStates.Crouching:
-                LookAround();
+
                 CheckForUnCrouch();
                 break;
             case PlayerStates.Sliding:
                 timer += Time.deltaTime;
                 vfxPlayer.SlidingParticles();
-                LookAround();
+               
                 CheckForUnCrouch();
                 SlideCancel();
                 break;
             case PlayerStates.Dashing:
-                
-                
+
+
                 break;
         }
     }
@@ -709,11 +719,12 @@ public class CameraMovement : MonoBehaviour
         float t = 0f;
         while (t < dashDuration)
         {
-            LookAround();
+            
             t += Time.deltaTime;
             vfxPlayer.StopDashingPS();
             yield return null;
         }
+      
 
         rb.drag = originalDrag;
         gravityModifier = originalGravityModifer;

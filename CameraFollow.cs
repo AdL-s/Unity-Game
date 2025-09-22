@@ -1,35 +1,22 @@
 using UnityEngine;
+using static UnityEngine.GraphicsBuffer;
 
 public class CameraFollow : MonoBehaviour
 {
-    [Header("Target")]
-    public Rigidbody targetRb;   // Player Rigidbody to follow
-
-    [Header("Settings")]
-    public float sensitivity = 2.0f; // Mouse sensitivity
-    public float followSmooth = 15f; // Position follow speed
-
-    private float verticalX = 0;
-    private float verticalY = 0;
+    public Transform target;
+    public Vector3 offset;
 
     private void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+       transform.localPosition = new Vector3(0, 0.6f, 0);
     }
-      private void LateUpdate()
+    private void FixedUpdate()
       {
 
-          if (targetRb == null) return;
-
-          // Smooth follow
-          Vector3 targetPos = targetRb.transform.position;
-          transform.position = Vector3.Lerp(transform.position, targetPos, followSmooth * Time.deltaTime);
-
-          verticalX += Input.GetAxis("Mouse X") * sensitivity;
-          verticalY += Input.GetAxis("Mouse Y") * sensitivity;
-          verticalY = Mathf.Clamp(verticalY, -90f, 90f);
-
-          transform.rotation = Quaternion.Euler(-verticalY, verticalX, 0f);
-      }
+        if (target == null) return;
+        transform.position = target.position + offset;
+        transform.LookAt(target);
+    }
 }
