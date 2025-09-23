@@ -18,7 +18,6 @@ public class CameraMovement : MonoBehaviour
     public Rigidbody rb;
 
     [Header("Speed")]
-    public float speedMultipl = 1;
     public float movementSpeed = 8f;
     public float maxVelocity = 2;
 
@@ -26,8 +25,6 @@ public class CameraMovement : MonoBehaviour
     public float acceleration = 12f;
     public float deceleration = 15f;
     public float airControl = 0.7f;
-    private Vector3 moveInput = Vector3.zero;
-    private Vector3 currentVelocity = Vector3.zero;
 
     [Header("Jump")]
     public float secondJumpMultForce = 1.25f;
@@ -57,10 +54,8 @@ public class CameraMovement : MonoBehaviour
     public float slideStarter = 0.8f; //what percantage of max velocity you can start slide 
     public float slideCounter = 0.03f;
     public float slideForce = 500;
-    private float sprintVelocityMultiplier = 1f;
     public float cooldown = 2f;
 
-    public bool grounded;
 
     [Header("Abillity Cooldown")]
     private float lastUsedTime = -Mathf.Infinity;
@@ -77,7 +72,7 @@ public class CameraMovement : MonoBehaviour
     public float slideFOV = 90f;        // Sliding FOV
     public float dashFOV = 80f;          // temporary FOV while dashing
     [Range(1, 20)] public float fovChangeSpeed = 10f; // Smoothing speed
-    private float targetFOV;            // The FOV we're moving toward
+    public float targetFOV;            // The FOV we're moving toward
 
     [Header("Camera Leaning")]
     public float leanAngle = 4f;      // how much tilt (degrees)
@@ -95,6 +90,8 @@ public class CameraMovement : MonoBehaviour
     private bool invokeUncrouch = false;
     private float timer = 0;
 
+    private bool canMoveThatDir = false;//bool to check if we can move that direction
+
     private bool doubleJump = true;
     private bool forceJump = false;
 
@@ -104,6 +101,10 @@ public class CameraMovement : MonoBehaviour
 
     [Header("layerMasks")]
     public LayerMask lm;
+
+    public bool grounded;
+    public enum PlayerStates { OnGround = 0, InAir = 1, Crouching = 2, Sliding = 3, Dashing = 4 };
+    public PlayerStates state;
 
     // Input caching system
     private struct InputCache
@@ -131,9 +132,6 @@ public class CameraMovement : MonoBehaviour
 
     private InputCache cachedInput;
 
-    public enum PlayerStates { OnGround = 0, InAir = 1, Crouching = 2, Sliding = 3, Dashing = 4 };
-    public PlayerStates state;
-
     private void Start()
     {
 
@@ -142,7 +140,7 @@ public class CameraMovement : MonoBehaviour
         InitializacePlayer();
         vfxPlayer = GetComponent<VFXPlayer>();
         targetFOV = normalFOV;
-        playerCamera.fieldOfView = normalFOV; // Apply immediately
+        playerCamera.fieldOfView = normalFOV; 
     }
 
     private void Update()
@@ -163,7 +161,7 @@ public class CameraMovement : MonoBehaviour
         UpdateByStatePhysics();
     }
 
-    private void UpdateFOV()
+    public void UpdateFOV()
     {
         if (playerCamera.fieldOfView != targetFOV)
         {
@@ -203,7 +201,7 @@ public class CameraMovement : MonoBehaviour
                     jumpDirection = jumpDirection.normalized;
                 }
 
-                // Apply jump with momentum (no speed bonus)
+                // Apply jump with momentum 
                 rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z);
                 rb.AddForce(jumpDirection * jumpForce, ForceMode.VelocityChange);
 
@@ -342,10 +340,19 @@ public class CameraMovement : MonoBehaviour
         moveDirection = direction;
 
         // Calculate target velocity
-        Vector3 targetVelocity = direction * movementSpeed * mult * speedMultipl * sprintVelocityMultiplier;
+        Vector3 targetVelocity = direction * movementSpeed * mult ;
 
         // Get current horizontal velocity
         Vector3 currentHorizontalVelocity = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z);
+
+        // raycast  for checking wall or an object in that direction
+        Ray ray = new Ray(new Vector3(0f,1.2f,0), direction);
+
+        //Sets true if we can move that direction   
+        canMoveThatDir = !Physics.Raycast(transform.position, direction, 1.25f, lm);
+
+        // If theres a object or something that direciton, don't apply movement
+        if (!canMoveThatDir) return;
 
         // Apply acceleration/deceleration
         Vector3 newVelocity;

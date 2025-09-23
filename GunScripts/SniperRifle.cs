@@ -1,8 +1,11 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Audio;
 
-public class RevolverScript : MonoBehaviour
+public class SniperRifle : MonoBehaviour
 {
+    [SerializeField] private CameraMovement fov;
+
     public float rateOfFire = 200f;
     private float timer = 0f;
 
@@ -32,17 +35,37 @@ public class RevolverScript : MonoBehaviour
         vfxPlayer = GetComponent<VFXPlayer>();
     }
 
+    
     void Update()
     {
+        if(Input.GetMouseButtonDown(1))
+        {
+            fov.targetFOV = 30f;
+            fov.UpdateFOV();
+            timer -= Time.deltaTime;
+            SingleFire();
+        }
+    }
 
-        timer -= Time.deltaTime;
-        SingleFire();
+    private void OnEnable()
+    {
+        StartCoroutine(WaitCoroutine());
+    }
+    private IEnumerator WaitCoroutine()
+    {
+        ready = false;
+        yield return new WaitForSeconds(waitTime);
+        ready = true;
+
     }
     private void SingleFire()
     {
         if (!ready)
         {
             return;
+        }else if (Input.GetMouseButtonDown(1)){
+
+
         }
         else if (Input.GetMouseButtonDown(0) && timer <= 0)
         {
@@ -50,7 +73,6 @@ public class RevolverScript : MonoBehaviour
             FireRayCast();
         }
     }
-
     public void FireRayCast()
     {
         // Muzzle world position
@@ -91,9 +113,7 @@ public class RevolverScript : MonoBehaviour
         // Sound of firing
         audioSource.pitch = Random.Range(pitchRandomMin, pitchRandomMax);
         audioSource.PlayOneShot(fireSound);
-    } 
-
-
+    }
     private void setTimer(float rateoffFire)
     {
         timer = 60 / rateoffFire;
@@ -101,16 +121,7 @@ public class RevolverScript : MonoBehaviour
     private void OnDisable()
     {
         timer = 0;
-    }
-    private void OnEnable()
-    {
-        StartCoroutine(WaitCoroutine());
+
     }
 
-    private IEnumerator WaitCoroutine()
-    {
-        ready = false;
-        yield return new WaitForSeconds(waitTime);
-        ready = true;
-    }
 }

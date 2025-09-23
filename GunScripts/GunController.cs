@@ -1,3 +1,4 @@
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class GunController : MonoBehaviour
@@ -14,7 +15,13 @@ public class GunController : MonoBehaviour
     public GameObject railModel;
     public GameObject railMuzzlePoint;
 
-    public enum gunMode { Revolver = 0, RailGun = 1, Smg = 2, };//add Sword with deflecting, maybe rocketLauncher
+    [Header("Sniper Rifle")]
+    public GameObject sniperRifleModel;
+    public GameObject sniperRiflePoint;
+
+
+
+    public enum gunMode { Revolver = 0, RailGun = 1, Smg = 2,SniperRifle = 3 };//add Sword with deflecting, maybe rocketLauncher
     public gunMode mode;
 
     private GunModelShooting GunModelShooting;
@@ -36,37 +43,54 @@ public class GunController : MonoBehaviour
         { 
             return; 
         }
+        gunMode oldMode = mode;
+
+        switch(oldMode)
+        {
+            case gunMode.Revolver:
+                revolverModel.SetActive(false);
+                revolverMuzzlePoint.SetActive(false);
+                break;
+
+            case gunMode.RailGun:
+                railModel.SetActive(false);
+                railMuzzlePoint.SetActive(false);
+                break;
+            case gunMode.Smg:
+                smgModel.SetActive(false);
+                smgMuzzlePoint.SetActive(false);
+                break;
+            case gunMode.SniperRifle:
+                sniperRifleModel.SetActive(false);
+                sniperRiflePoint.SetActive(false);
+                break;  
+        }
 
         mode = newMode;
 
         switch (mode)
         {
             case gunMode.Revolver:
-               
-                SMGDeActiveate();
-
-                RailGunDeActivate();
-
-                RevolverActivate();
-
+ 
+                
+                revolverModel.SetActive(true);
+                revolverMuzzlePoint.SetActive(true);
 
                 break;
             case gunMode.RailGun:
-                
-                RevolverDeActivate();
 
-                SMGDeActiveate();
-
-                RailGunActivate();
+                railModel.SetActive(true);
+                railMuzzlePoint.SetActive(true);
 
                 break;
             case gunMode.Smg:
+                smgModel.SetActive(true);
+                smgMuzzlePoint.SetActive(true);
 
-                RevolverDeActivate();
-
-                RailGunDeActivate();
-
-                SMGActivate();
+                break;
+            case gunMode.SniperRifle:
+                sniperRifleModel.SetActive(true);
+                sniperRiflePoint.SetActive(true);
                 break;
             
         }
@@ -83,45 +107,11 @@ public class GunController : MonoBehaviour
                 break;
             case gunMode.RailGun:
                 break;
+            case gunMode.SniperRifle:
+
+                break;
         }
     }
-
-    private void RevolverActivate()
-    {
-        revolverModel.SetActive(true);
-        revolverMuzzlePoint.SetActive(true);
-    }
-
-    private void RevolverDeActivate()
-    {
-        revolverModel.SetActive(false);
-        revolverMuzzlePoint.SetActive(false);
-    }
-
-    private void SMGActivate()
-    {
-        smgModel.SetActive(true);
-        smgMuzzlePoint.SetActive(true);
-    }
-
-    private void SMGDeActiveate()
-    {
-        smgModel.SetActive(false);
-        smgMuzzlePoint.SetActive(false);
-    }
-
-    private void RailGunActivate()
-    {
-        railModel.SetActive(true);
-        railMuzzlePoint.SetActive(true);
-    }
-    private void RailGunDeActivate()
-    {
-        railModel.SetActive(false);
-        railMuzzlePoint.SetActive(false);
-    }
-
-
 
 
     private void Switcher()
@@ -138,6 +128,9 @@ public class GunController : MonoBehaviour
         else if (Input.GetKeyDown(KeyCode.F))
         {
             ModeSwitch(gunMode.RailGun);
+        }else if (Input.GetKeyDown(KeyCode.C))
+        {
+            ModeSwitch(gunMode.SniperRifle);
         }
     }
 }
