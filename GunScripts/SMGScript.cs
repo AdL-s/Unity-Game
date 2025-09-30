@@ -54,6 +54,18 @@ public class SMGScript : MonoBehaviour
             FireRayCast();
         }
     }
+    /*private void SingleFire()
+    {
+        if (!ready)
+        {
+            return;
+        }
+        else if (Input.GetMouseButtonDown(0) && timer <= 0)
+        {
+            setTimer(rateOfFire);
+    FireRayCast();
+}
+    }*/
 
     
 
@@ -62,10 +74,6 @@ public class SMGScript : MonoBehaviour
         // Get a ray from the center of the screen (crosshair)
         Ray ray = Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
 
-        // Play sound
-        audioSource.clip = fireSound;
-        audioSource.pitch = Random.Range(pitchRandomMin, pitchRandomMax);
-        audioSource.PlayOneShot(fireSound);
 
         // Muzzle flash
 
@@ -82,6 +90,10 @@ public class SMGScript : MonoBehaviour
                 enemyBasic.DamageRecivied(damage);
             }
         }
+        // Play sound
+        audioSource.clip = fireSound;
+        audioSource.pitch = Random.Range(pitchRandomMin, pitchRandomMax);
+        audioSource.PlayOneShot(fireSound);
     }
 
     private void setTimer(float rateoffFire)

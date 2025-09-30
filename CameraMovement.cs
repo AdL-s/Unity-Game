@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
+using Unity.VisualScripting;
 using UnityEngine;
+using static UnityEngine.GraphicsBuffer;
 public class CameraMovement : MonoBehaviour
 {
     [Header("Constants")]
@@ -65,15 +67,6 @@ public class CameraMovement : MonoBehaviour
     public Collider standingCollider;
 
 
-    [Header("Camera FOVS")]
-    public float normalFOV = 60f;       // Default FOV
-    public float sprintFOV = 80f;       // Sprinting FOV
-    public float crouchFOV = 55f;       // Crouching FOV
-    public float slideFOV = 90f;        // Sliding FOV
-    public float dashFOV = 80f;          // temporary FOV while dashing
-    [Range(1, 20)] public float fovChangeSpeed = 10f; // Smoothing speed
-    public float targetFOV;            // The FOV we're moving toward
-
     [Header("Camera Leaning")]
     public float leanAngle = 4f;      // how much tilt (degrees)
     public float leanSpeed = 12f;       // how fast it tilts
@@ -96,6 +89,7 @@ public class CameraMovement : MonoBehaviour
     private bool forceJump = false;
 
     private VFXPlayer vfxPlayer;
+    private FovUpdates FoP;
 
     private Vector3 moveDirection = Vector3.zero;
 
@@ -139,8 +133,9 @@ public class CameraMovement : MonoBehaviour
         ToggleCursor();
         InitializacePlayer();
         vfxPlayer = GetComponent<VFXPlayer>();
-        targetFOV = normalFOV;
-        playerCamera.fieldOfView = normalFOV; 
+        FoP = GetComponent<FovUpdates>();
+        FoP.targetFOV = FoP.normalFOV;
+        playerCamera.fieldOfView = FoP.normalFOV; 
     }
 
     private void Update()
@@ -151,7 +146,7 @@ public class CameraMovement : MonoBehaviour
         LookAround();
         UpdateByStatePhysics();
         UpdateByStateNonPhysics();
-        UpdateFOV();
+        FoP.UpdateFOV();
         AirTimer();
     }
 
@@ -159,19 +154,6 @@ public class CameraMovement : MonoBehaviour
     {
         // Handle all physics-based movement
         UpdateByStatePhysics();
-    }
-
-    public void UpdateFOV()
-    {
-        if (playerCamera.fieldOfView != targetFOV)
-        {
-            // Smoothly transition to target FOV
-            playerCamera.fieldOfView = Mathf.Lerp(
-                playerCamera.fieldOfView,
-                targetFOV,
-                fovChangeSpeed * Time.deltaTime
-            );
-        }
     }
 
     private void Jump()
@@ -498,26 +480,25 @@ public class CameraMovement : MonoBehaviour
                 maxVelocity = defaultMaxMovement;
                 doubleJump = true;
                 SetColliderToGround();
-                targetFOV = normalFOV;
+                FoP.targetFOV = FoP.normalFOV;
                 break;
             case PlayerStates.InAir:
                 SetColliderToGround();
-                maxVelocity = defaultMaxMovement * 3f;
-                targetFOV = normalFOV;
+                FoP.targetFOV = FoP.normalFOV;
                 break;
             case PlayerStates.Crouching:
                 SetColliderToCrouch();
                 maxVelocity = defaultCrouchMaxMovement;
-                targetFOV = crouchFOV;
+                FoP.targetFOV = FoP.crouchFOV;
                 break;
             case PlayerStates.Sliding:
                 SetColliderToCrouch();
                 timer = 0;
-                targetFOV = slideFOV;
+                FoP.targetFOV = FoP.slideFOV;
                 break;
             case PlayerStates.Dashing:
                 SetColliderToGround();
-                targetFOV = normalFOV;
+                FoP.targetFOV = FoP.normalFOV;
                 break;
         }
     }
@@ -526,7 +507,11 @@ public class CameraMovement : MonoBehaviour
     {
         standingCollider.enabled = false;
         crouchingCollider.enabled = true;
-        playerCamera.transform.localPosition = new Vector3(0, -0.2f, 0);
+
+        Vector3 StandingCol = new Vector3(0, 0.6f, 0);
+        Vector3 CrouchCol = new Vector3(0, -0.2f, 0);
+
+        playerCamera.transform.localPosition = Vector3.Lerp(CrouchCol, StandingCol, Time.deltaTime * FoP.colChangeCamSpeed);
     }
 
     public void SetColliderToGround()
@@ -535,7 +520,12 @@ public class CameraMovement : MonoBehaviour
         {
             standingCollider.enabled = true;
             crouchingCollider.enabled = false;
-            playerCamera.transform.localPosition = new Vector3(0, 0.6f, 0);
+
+            
+            Vector3 StandingCol = new Vector3(0, 0.6f, 0);
+            Vector3 CrouchCol = new Vector3(0, -0.2f, 0);
+
+            playerCamera.transform.localPosition = Vector3.Lerp(StandingCol, CrouchCol, Time.deltaTime * FoP.colChangeCamSpeed); ;
         }
     }
 
@@ -705,7 +695,7 @@ public class CameraMovement : MonoBehaviour
         float h = Input.GetAxisRaw("Horizontal");
         float v = Input.GetAxisRaw("Vertical");
 
-        targetFOV = dashFOV;
+        FoP.targetFOV = FoP.dashFOV;
 
         Vector3 inputDir = (playerCamera.transform.forward * v + playerCamera.transform.right * h);
         inputDir.y = 0f;
