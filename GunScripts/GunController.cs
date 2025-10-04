@@ -4,19 +4,15 @@ public class GunController : MonoBehaviour
 {
     [Header("Revolver")]
     public GameObject revolverModel;
-    public GameObject revolverMuzzlePoint;
     
     [Header("SMG")]
     public GameObject smgModel;
-    public GameObject smgMuzzlePoint;
     
     [Header("RailGun")]
     public GameObject railModel;
-    public GameObject railMuzzlePoint;
 
     [Header("Sniper Rifle")]
     public GameObject sniperRifleModel;
-    public GameObject sniperRiflePoint;
 
 
 
@@ -48,20 +44,16 @@ public class GunController : MonoBehaviour
         {
             case gunMode.Revolver:
                 revolverModel.SetActive(false);
-                revolverMuzzlePoint.SetActive(false);
                 break;
 
             case gunMode.RailGun:
                 railModel.SetActive(false);
-                railMuzzlePoint.SetActive(false);
                 break;
             case gunMode.Smg:
                 smgModel.SetActive(false);
-                smgMuzzlePoint.SetActive(false);
                 break;
             case gunMode.SniperRifle:
                 sniperRifleModel.SetActive(false);
-                sniperRiflePoint.SetActive(false);
                 break;  
         }
 
@@ -73,23 +65,19 @@ public class GunController : MonoBehaviour
  
                 
                 revolverModel.SetActive(true);
-                revolverMuzzlePoint.SetActive(true);
 
                 break;
             case gunMode.RailGun:
 
                 railModel.SetActive(true);
-                railMuzzlePoint.SetActive(true);
 
                 break;
             case gunMode.Smg:
-                smgModel.SetActive(true);
-                smgMuzzlePoint.SetActive(true);
+                smgModel.SetActive(true);              
 
                 break;
             case gunMode.SniperRifle:
                 sniperRifleModel.SetActive(true);
-                sniperRiflePoint.SetActive(true);
                 break;
             
         }

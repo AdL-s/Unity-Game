@@ -1,8 +1,6 @@
 using System;
 using System.Collections;
-using Unity.VisualScripting;
 using UnityEngine;
-using static UnityEngine.GraphicsBuffer;
 public class CameraMovement : MonoBehaviour
 {
     [Header("Constants")]
@@ -716,7 +714,11 @@ public class CameraMovement : MonoBehaviour
         float t = 0f;
         while (t < dashDuration)
         {
-            
+
+            Vector3 vel = rb.velocity;
+            vel.y = 0f;
+            rb.velocity = vel;
+
             t += Time.deltaTime;
             vfxPlayer.StopDashingPS();
             yield return null;

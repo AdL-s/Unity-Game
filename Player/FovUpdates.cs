@@ -5,7 +5,6 @@ public class FovUpdates : MonoBehaviour
 
     [Header("Camera FOVS")]
     public float normalFOV = 60f;       // Default FOV
-    public float sprintFOV = 80f;       // Sprinting FOV
     public float crouchFOV = 55f;       // Crouching FOV
     public float slideFOV = 90f;        // Sliding FOV
     public float dashFOV = 80f;          // temporary FOV while dashing
@@ -21,22 +20,24 @@ public class FovUpdates : MonoBehaviour
         
     }
 
-    void Update()
-    {
-        
-    }
-
     public void UpdateFOV()
     {
-        if(SniperRifle.isScoped)
+        if (SniperRifle != null && SniperRifle.isScoped)
         {
-            return;
-
-        } else if (CM.playerCamera.fieldOfView != targetFOV)
+            
+            if (targetFOV != SniperRifle.scopedFOV)
             {
-                // Smoothly transition to target FOV
-                 CM.playerCamera.fieldOfView = Mathf.Lerp(CM.playerCamera.fieldOfView,targetFOV,fovChangeSpeed * Time.deltaTime);
-            }
+                targetFOV = SniperRifle.scopedFOV;             }
+        }
+
+        if (CM.playerCamera.fieldOfView != targetFOV)
+        {
+            CM.playerCamera.fieldOfView = Mathf.Lerp(
+                CM.playerCamera.fieldOfView,
+                targetFOV,
+                fovChangeSpeed * Time.deltaTime
+            );
+        }
     }
 
 
