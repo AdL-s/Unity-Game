@@ -19,11 +19,9 @@ public class GunController : MonoBehaviour
     public enum gunMode { Revolver = 0, RailGun = 1, Smg = 2,SniperRifle = 3 };//add Sword with deflecting, maybe rocketLauncher
     public gunMode mode;
 
-    private GunModelShooting GunModelShooting;
 
     void Start()
     {
-        GunModelShooting = GetComponent<GunModelShooting>();
 
     }
 

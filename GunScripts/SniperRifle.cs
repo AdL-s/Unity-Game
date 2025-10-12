@@ -15,6 +15,8 @@ public class SniperRifle : MonoBehaviour
     public float scopedFOV = 20f;
     public float normalFOV = 60f;
     public bool isScoped = false;
+    public float ScopedSens = 0.2f;
+    float originalSens;
 
     [Header("Sound Settings")]
     public float pitchRandomMin = 0.7f;
@@ -34,7 +36,6 @@ public class SniperRifle : MonoBehaviour
     public ParticleSystem shootingPS;
 
     [Header("Ray Settings")]
-    public float ScopedSens = 0.5f;
     public LayerMask lm = (1 << 0) | (1 << 9);
     private LayerMask enemyLm = 9;
     public CameraMovement CM;
@@ -43,7 +44,7 @@ public class SniperRifle : MonoBehaviour
 
     void Start()
     {
-        float originalSens = CM.sensitivity;
+        originalSens = CM.sensitivity;
         if (CM == null)
             CM = GetComponent<CameraMovement>();
 
@@ -91,13 +92,11 @@ public class SniperRifle : MonoBehaviour
         if (fov == null) return;
 
         isScoped = !isScoped;
-        float originalSens = CM.sensitivity;
 
         if (isScoped)
         {
-
-            fov.targetFOV = scopedFOV; 
             CM.sensitivity = CM.sensitivity * ScopedSens;
+            fov.targetFOV = scopedFOV; 
         }
         else
         {
