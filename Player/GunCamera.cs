@@ -13,10 +13,8 @@ public class GunCamera : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (SR.isActiveAndEnabled)
-        {
+       
             CameraChange();
-        }
     }
     private void CameraChange()
     {

@@ -14,6 +14,7 @@ public class SMGScript : MonoBehaviour
     public float pitchRandomMin = 0.7f;
     public float pitchRandomMax = 0.85f;
     public AudioClip fireSound;
+    public AudioClip impactSound;
     public AudioSource audioSource;
 
     [Header("SMG Model and Muzzle")]
@@ -58,7 +59,8 @@ public class SMGScript : MonoBehaviour
             hitEffectPrefab,
             lm, enemyLm,
             shootingPS,
-            damage
+            damage,
+            impactSound
         );
 
         // Muzzle flash

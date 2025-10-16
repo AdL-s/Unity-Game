@@ -14,7 +14,9 @@ public class RevolverScript : MonoBehaviour
     public float pitchRandomMin = 0.7f;
     public float pitchRandomMax = 0.85f;
     public AudioClip fireSound;
+    public AudioClip impactSound;
     public AudioSource audioSource;
+
 
     [Header("Revolver Model and Muzzle")]
     public Transform muzzlePoint;
@@ -58,7 +60,8 @@ public class RevolverScript : MonoBehaviour
             hitEffectPrefab,
             lm, enemyLm,
             shootingPS,
-            damage
+            damage,
+            impactSound
         );
 
         // Muzzle flash

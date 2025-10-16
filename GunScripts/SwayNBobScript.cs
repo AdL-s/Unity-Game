@@ -27,6 +27,10 @@ public class SwayNBobScript : MonoBehaviour
     Vector3 bobPosition;
     public float bobExaggeration;
 
+    [Header("Idle Bob Settings")]
+    public float idleBobAmount = 0.1f; // How much bob when standing still (0-1)
+    public float idleBobSpeed = 1f; // Speed of idle breathing bob
+
     [Header("Bob Rotation")]
     public Vector3 multiplier;
     Vector3 bobEulerRotation;
@@ -34,12 +38,10 @@ public class SwayNBobScript : MonoBehaviour
     [Header("Model Rotation Offset")]
     public Vector3 modelRotationOffset = Vector3.zero;
     private Quaternion baseRotation;
-    private Vector3 initialLocalPosition;
-    private Quaternion initialLocalRotation; // Store initial rotation
 
-    [Header("Position Capture")]
-    public bool captureInitialPositionOnStart = true;
-    public Vector3 manualInitialPosition = Vector3.zero; // Set this manually if captureOnStart is false
+    [Header("Base Position & Rotation")]
+    public Vector3 basePosition = Vector3.zero; // Set the gun's base position here
+    public Vector3 baseRotationEuler = Vector3.zero; // This doesnt work use offset
 
     void Start()
     {
@@ -48,18 +50,6 @@ public class SwayNBobScript : MonoBehaviour
 
     void OnEnable()
     {
-        // Capture position when the gun is enabled/activated
-        if (captureInitialPositionOnStart)
-        {
-            initialLocalPosition = transform.localPosition;
-            initialLocalRotation = transform.localRotation; // Capture rotation too
-        }
-        else
-        {
-            initialLocalPosition = manualInitialPosition;
-            initialLocalRotation = Quaternion.identity;
-        }
-
         // Reset all movement values to prevent drift
         swayPos = Vector3.zero;
         bobPosition = Vector3.zero;
@@ -111,23 +101,37 @@ public class SwayNBobScript : MonoBehaviour
 
     void CompositePositionRotation()
     {
-        Vector3 targetPosition = initialLocalPosition + swayPos + bobPosition;
+        // Use base position from Inspector + sway and bob effects
+        Vector3 targetPosition = basePosition + swayPos + bobPosition;
         transform.localPosition = Vector3.Lerp(transform.localPosition, targetPosition, Time.deltaTime * smooth);
 
-        // Apply initial rotation, then model offset, then sway and bob
-        Quaternion targetRotation = initialLocalRotation * baseRotation * Quaternion.Euler(swayEulerRot) * Quaternion.Euler(bobEulerRotation);
+        // Use base rotation from Inspector + model offset + sway and bob
+        Quaternion baseRot = Quaternion.Euler(baseRotationEuler);
+        Quaternion targetRotation = baseRot * baseRotation * Quaternion.Euler(swayEulerRot) * Quaternion.Euler(bobEulerRotation);
         transform.localRotation = Quaternion.Slerp(transform.localRotation, targetRotation, Time.deltaTime * smoothRot);
     }
 
     void BobOffset()
     {
+        // Check if player is moving
         bool isMoving = walkInput.magnitude > 0.01f;
 
-        speedCurve += Time.deltaTime * (mover.grounded ? (Input.GetAxis("Horizontal") + Input.GetAxis("Vertical")) * bobExaggeration : 1f) + (isMoving ? 0.003f : 0f);
-
-        bobPosition.x = (curveCos * bobLimit.x * (mover.grounded && isMoving ? 1 : 0)) - (walkInput.x * travelLimit.x);
-        bobPosition.y = (curveSin * bobLimit.y * (isMoving ? 1 : 0)) - (Input.GetAxis("Vertical") * travelLimit.y);
-        bobPosition.z = -(walkInput.y * travelLimit.z);
+        if (isMoving)
+        {
+            // Normal walking bob
+            speedCurve += Time.deltaTime * (mover.grounded ? (Input.GetAxis("Horizontal") + Input.GetAxis("Vertical")) * bobExaggeration : 1f) + 0.01f;
+            bobPosition.x = (curveCos * bobLimit.x * (mover.grounded ? 1 : 0)) - (walkInput.x * travelLimit.x);
+            bobPosition.y = (curveSin * bobLimit.y) - (Input.GetAxis("Vertical") * travelLimit.y);
+            bobPosition.z = -(walkInput.y * travelLimit.z);
+        }
+        else
+        {
+            // Idle breathing bob (subtle)
+            speedCurve += Time.deltaTime * idleBobSpeed;
+            bobPosition.x = curveCos * bobLimit.x * idleBobAmount;
+            bobPosition.y = curveSin * bobLimit.y * idleBobAmount;
+            bobPosition.z = 0f;
+        }
     }
 
     void BobRotation()

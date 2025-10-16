@@ -22,6 +22,7 @@ public class SniperRifle : MonoBehaviour
     public float pitchRandomMin = 0.7f;
     public float pitchRandomMax = 0.85f;
     public AudioClip fireSound;
+    public AudioClip impactSound;
     public AudioSource audioSource;
     
     [Header("Ray Settings")]
@@ -125,9 +126,10 @@ public class SniperRifle : MonoBehaviour
         if (fov != null)
         {
             isScoped = false;
-            fov.targetFOV = normalFOV;
-            fov.UpdateFOV(); // force apply
         }
+        fov.targetFOV = normalFOV;
+        fov.UpdateFOV();
+        CM.sensitivity = originalSens;
     }
 
     private IEnumerator WaitCoroutine()
@@ -148,7 +150,8 @@ public class SniperRifle : MonoBehaviour
              audioSource, fireSound,
              pitchRandomMin, pitchRandomMax,
              shootingPS,
-             damage
+             damage,
+             impactSound
          );
     }
 }

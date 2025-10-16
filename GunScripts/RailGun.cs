@@ -14,6 +14,7 @@ public class RailGun : MonoBehaviour
     [SerializeField] public float pitchRandomMin = 0.7f;
     [SerializeField] public float pitchRandomMax = 0.85f;
     public AudioClip fireSound;
+    public AudioClip impactSound;
     public AudioSource audioSource;
 
     [Header("Ray Settings")]
@@ -60,7 +61,8 @@ public class RailGun : MonoBehaviour
             audioSource, fireSound,
             pitchRandomMin, pitchRandomMax,
             shootingPS, 
-            damage
+            damage,
+            impactSound
         );
     }
 

@@ -8,7 +8,7 @@ public class DoorTrigger : MonoBehaviour
     
     private void OnTriggerExit(Collider other)
     {
-       if (other.gameObject.layer == 6)
+       if (other.gameObject.layer == 11)
         {
             dvere.otvoreni = false;
         }
@@ -16,7 +16,7 @@ public class DoorTrigger : MonoBehaviour
     }
     private void OnTriggerEnter(Collider other)
     {
-       if (other.gameObject.layer == 6)
+       if (other.gameObject.layer == 11)
         {
             dvere.otvoreni = true;
         }

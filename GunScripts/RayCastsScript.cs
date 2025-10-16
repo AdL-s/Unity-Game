@@ -6,30 +6,43 @@ public class RayCastsScript : MonoBehaviour
 {
     // not comenting this shit
     public static void FireRayCastLineRay(
-        Transform muzzlePoint, LayerMask lm, LayerMask enemyLm,
-        GameObject hitEffectPrefab,
-        LineRenderer lineRendererPrefab, float rayDuration, 
-        AudioSource audioSource, AudioClip fireSound,
-        float pitchRandomMin, float pitchRandomMax,
-        ParticleSystem shootingPS,float damage )
+    Transform muzzlePoint, LayerMask lm, LayerMask enemyLm,
+    GameObject hitEffectPrefab,
+    LineRenderer lineRendererPrefab, float rayDuration,
+    AudioSource audioSource, AudioClip fireSound,
+    float pitchRandomMin, float pitchRandomMax,
+    ParticleSystem shootingPS, float damage,
+    AudioClip impactSound, float spatialBlend = 1f, float soundMinDistance = 1f, float soundMaxDistance = 50f)
     {
         // Start of the laser (muzzle)
         Vector3 origin = muzzlePoint.position;
-
         // Ray from the center of the screen (crosshair)
         Ray camRay = Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
         RaycastHit hit;
-
         // The point we want to shoot at
         Vector3 targetPoint;
 
         if (Physics.Raycast(camRay, out hit, 5000, lm))
         {
             targetPoint = hit.point;
-
             // Spawn hit particles
             GameObject particles = Instantiate(hitEffectPrefab, hit.point, Quaternion.identity);
             particles.transform.forward = hit.normal;
+
+            // Play impact audio at hit point
+            if (impactSound != null)
+            {
+                GameObject tempAudio = new GameObject("TempAudio");
+                tempAudio.transform.position = hit.point;
+                AudioSource source = tempAudio.AddComponent<AudioSource>();
+                source.clip = impactSound;
+                source.spatialBlend = spatialBlend; // 3D sound
+                source.minDistance = soundMinDistance;
+                source.maxDistance = soundMaxDistance;
+                source.Play();
+                Destroy(tempAudio, impactSound.length);
+            }
+
             if (hit.collider.gameObject.layer == enemyLm)
             {
                 EnemyBasic enemyBasic = hit.collider.GetComponent<EnemyBasic>();
@@ -64,7 +77,8 @@ public class RayCastsScript : MonoBehaviour
         AudioSource audioSource, AudioClip fireSound, float pitchRandomMin, float pitchRandomMax,
         GameObject hitEffectPrefab, LayerMask lm, LayerMask enemyLm,
         ParticleSystem shootingsPS,
-        float damage)
+        float damage,
+        AudioClip impactSound, float spatialBlend = 1f, float soundMinDistance = 1f, float soundMaxDistance = 50f)
     {
         // Get a ray from the center of the screen (crosshair)
         Ray ray = Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
@@ -73,12 +87,11 @@ public class RayCastsScript : MonoBehaviour
         audioSource.clip = fireSound;
         audioSource.pitch = Random.Range(pitchRandomMin, pitchRandomMax);
         audioSource.PlayOneShot(fireSound);
-        if(shootingsPS != null)
+
+        if (shootingsPS != null)
         {
             shootingsPS.Play();
         }
-
-        // Muzzle flash
 
         // Check for hit
         if (Physics.Raycast(ray, out RaycastHit hit, 5000, lm))
@@ -86,6 +99,20 @@ public class RayCastsScript : MonoBehaviour
             // Spawn hit effect
             GameObject particles = Instantiate(hitEffectPrefab, hit.point, Quaternion.identity);
             particles.transform.forward = hit.normal;
+
+            // Play impact audio at hit point
+            if (impactSound != null)
+            {
+                GameObject tempAudio = new GameObject("TempAudio");
+                tempAudio.transform.position = hit.point;
+                AudioSource source = tempAudio.AddComponent<AudioSource>();
+                source.clip = impactSound;
+                source.spatialBlend = spatialBlend; // 3D sound
+                source.minDistance = soundMinDistance;
+                source.maxDistance = soundMaxDistance;
+                source.Play();
+                Destroy(tempAudio, impactSound.length);
+            }
 
             if (hit.collider.gameObject.layer == enemyLm)
             {

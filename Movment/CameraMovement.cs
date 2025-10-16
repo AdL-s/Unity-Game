@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using UnityEngine;
+using static UnityEngine.UI.Image;
 public class CameraMovement : MonoBehaviour
 {
     [Header("Constants")]
@@ -93,6 +94,7 @@ public class CameraMovement : MonoBehaviour
 
     [Header("layerMasks")]
     public LayerMask lm;
+    public bool crouched = false;
 
     public bool grounded;
     public enum PlayerStates { OnGround = 0, InAir = 1, Crouching = 2, Sliding = 3, Dashing = 4 };
@@ -307,7 +309,7 @@ public class CameraMovement : MonoBehaviour
         playerCamera.transform.localRotation = baseRotation * Quaternion.Euler(0, 0, currentLean);
     }
 
-    public void Movement(float mult)
+    private void Movement(float mult)
     {
         // Get input direction
         Vector3 direction = Vector3.zero;
@@ -315,23 +317,64 @@ public class CameraMovement : MonoBehaviour
         if (cachedInput.s) direction += -transform.forward;
         if (cachedInput.a) direction += -transform.right;
         if (cachedInput.d) direction += transform.right;
-
         direction.Normalize();
         moveDirection = direction;
 
         // Calculate target velocity
-        Vector3 targetVelocity = direction * movementSpeed * mult ;
+        Vector3 targetVelocity = direction * movementSpeed * mult;
 
         // Get current horizontal velocity
         Vector3 currentHorizontalVelocity = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z);
 
-        // raycast  for checking wall or an object in that direction
-        Ray ray = new Ray(new Vector3(0f,1.2f,0), direction);
+        // Raycast setup - 5 rays to cover more area
+        float rayDistance = 1.2f;
 
-        //Sets true if we can move that direction   
-        canMoveThatDir = !Physics.Raycast(transform.position, direction, 1.25f, lm);
+        if (crouched) // Collider height: 1.1
+        {
+            Vector3 ray1 = transform.position + transform.up * -0.65f;
+            Vector3 ray2 = transform.position + transform.up * -0.325f;
+            Vector3 ray3 = transform.position;
+            Vector3 ray4 = transform.position + transform.up * 0.325f;
+            Vector3 ray5 = transform.position + transform.up * 0.65f;
 
-        // If theres a object or something that direciton, don't apply movement
+            /*Debug.DrawRay(ray1, direction * rayDistance, Color.red, 0.1f);
+            Debug.DrawRay(ray2, direction * rayDistance, Color.yellow, 0.1f);
+            Debug.DrawRay(ray3, direction * rayDistance, Color.green, 0.1f);
+            Debug.DrawRay(ray4, direction * rayDistance, Color.cyan, 0.1f);
+            Debug.DrawRay(ray5, direction * rayDistance, Color.blue, 0.1f);*/
+
+            bool hit1 = Physics.Raycast(ray1, direction, rayDistance, lm);
+            bool hit2 = Physics.Raycast(ray2, direction, rayDistance, lm);
+            bool hit3 = Physics.Raycast(ray3, direction, rayDistance, lm);
+            bool hit4 = Physics.Raycast(ray4, direction, rayDistance, lm);
+            bool hit5 = Physics.Raycast(ray5, direction, rayDistance, lm);
+
+            canMoveThatDir = !(hit1 || hit2 || hit3 || hit4 || hit5);
+        }
+        else // Collider height: 2.2
+        {
+            Vector3 ray1 = transform.position + transform.up * -0.8f;
+            Vector3 ray2 = transform.position + transform.up * -0.4f;
+            Vector3 ray3 = transform.position;
+            Vector3 ray4 = transform.position + transform.up * 0.4f;
+            Vector3 ray5 = transform.position + transform.up * 0.8f;
+
+            /*Debug.DrawRay(ray1, direction * rayDistance, Color.red, 0.1f);
+            Debug.DrawRay(ray2, direction * rayDistance, Color.yellow, 0.1f);
+            Debug.DrawRay(ray3, direction * rayDistance, Color.green, 0.1f);
+            Debug.DrawRay(ray4, direction * rayDistance, Color.cyan, 0.1f);
+            Debug.DrawRay(ray5, direction * rayDistance, Color.blue, 0.1f);*/
+
+            bool hit1 = Physics.Raycast(ray1, direction, rayDistance, lm);
+            bool hit2 = Physics.Raycast(ray2, direction, rayDistance, lm);
+            bool hit3 = Physics.Raycast(ray3, direction, rayDistance, lm);
+            bool hit4 = Physics.Raycast(ray4, direction, rayDistance, lm);
+            bool hit5 = Physics.Raycast(ray5, direction, rayDistance, lm);
+
+            canMoveThatDir = !(hit1 || hit2 || hit3 || hit4 || hit5);
+        }
+
+        // If there's an object in that direction, don't apply movement
         if (!canMoveThatDir) return;
 
         // Apply acceleration/deceleration
@@ -353,7 +396,6 @@ public class CameraMovement : MonoBehaviour
         // Apply force
         rb.AddForce(velocityChange, ForceMode.VelocityChange);
     }
-
     private void Counter(float modifier)
     {
 
@@ -506,6 +548,8 @@ public class CameraMovement : MonoBehaviour
         standingCollider.enabled = false;
         crouchingCollider.enabled = true;
 
+        crouched = true;
+
         Vector3 StandingCol = new Vector3(0, 0.6f, 0);
         Vector3 CrouchCol = new Vector3(0, -0.2f, 0);
 
@@ -518,6 +562,7 @@ public class CameraMovement : MonoBehaviour
         {
             standingCollider.enabled = true;
             crouchingCollider.enabled = false;
+            crouched = false;
 
             
             Vector3 StandingCol = new Vector3(0, 0.6f, 0);
