@@ -37,6 +37,7 @@ public class MelleeAI : MonoBehaviour
 
     void Update()
     {
+
         if (Target == null) return;
 
         m_Distance = Vector3.Distance(mAgent.transform.position, Target.position);

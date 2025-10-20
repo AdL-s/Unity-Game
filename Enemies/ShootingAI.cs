@@ -19,8 +19,9 @@ public class ShootingAI : MonoBehaviour
     private NavMeshAgent mAgent; //The enemy model
     private bool isAttacking = false;
     private float timer;
-    
-    
+
+    public GameObject player;
+    public LayerMask LayerMask = (1 << 0) | (1 << 9);
     [SerializeField] public GameObject bullet;
     [SerializeField] public Transform muzzlePoint;//where the bullets come from
     
@@ -42,6 +43,17 @@ public class ShootingAI : MonoBehaviour
 
     void Update()
     {
+        //logic for when ray doesnt hit player to move to position where he can 
+        RaycastHit hit;
+        if (Physics.Raycast(transform.position, player.transform.position, out hit,LayerMask))
+        {   
+            Debug.DrawRay(transform.position, hit.point);
+            mAgent.updateRotation = true;
+            mAgent.isStopped = false;
+            mAgent.destination = Target.position;
+            return;
+        } 
+
         if (Target == null) return;
 
         timer += Time.deltaTime;
@@ -49,25 +61,21 @@ public class ShootingAI : MonoBehaviour
 
         if (m_Distance > shotDistance)
         {
-            mAgent.isStopped = true;      // stops agent movement
-            mAgent.updateRotation = false; // disable NavMeshAgent rotation
-
             // Add custom rotation to look at player
             LookAtTarget();
 
-            if (timer >= spawndelay)
-            {   
-                GameObject newBullet = Instantiate(bullet, muzzlePoint.position, muzzlePoint.rotation);
-                Projectile projectile = newBullet.GetComponent<Projectile>();
-                newBullet.transform.forward = muzzlePoint.forward;
-                projectile.SetSpeed(m_Distance < 23 ? 50f : m_Distance * 1.25f); // if distance from player is less than 23 than speed of projectile is 50f else distance from player * 1.25
-                timer = 0;
-            }
+            Shooting();
+
         }
         else
         {
-           
+           if(mAgent.pathStatus == NavMeshPathStatus.PathPartial)
+           {
+                Shooting();
+           }
             mAgent.updateRotation = true; // Re-enable NavMeshAgent rotation for movement
+            mAgent.isStopped = false;
+            mAgent.destination = Target.position;
 
             if (m_Distance < ADistance && !isAttacking)
             {
@@ -117,6 +125,41 @@ public class ShootingAI : MonoBehaviour
     private void Damage()
     {
 
+    }
+
+    private void Shooting()
+    {
+        mAgent.isStopped = true;      // stops agent movement
+        mAgent.updateRotation = false; // disable NavMeshAgent rotation
+
+        if (timer >= spawndelay)
+        {
+            // Calculate direction from muzzle to target
+            Vector3 directionToTarget = (Target.position - muzzlePoint.position).normalized;
+
+            // Create rotation that points toward target
+            Quaternion shootRotation = Quaternion.LookRotation(directionToTarget);
+
+            // Calculate speed BEFORE instantiating
+            float bulletSpeed = m_Distance < 23 ? 50f : m_Distance * 1.25f;
+
+            // Spawn bullet with rotation toward target
+            GameObject newBullet = Instantiate(bullet, muzzlePoint.position, shootRotation);
+
+            // Disable the bullet temporarily to set speed before Start() runs
+            newBullet.SetActive(false);
+
+            Projectile projectile = newBullet.GetComponent<Projectile>();
+            if (projectile != null)
+            {
+                projectile.SetSpeed(bulletSpeed);
+            }
+
+            // Re-enable the bullet so Start() runs with correct speed
+            newBullet.SetActive(true);
+
+            timer = 0;
+        }
     }
 
     private void OnTriggerExit(Collider other)
