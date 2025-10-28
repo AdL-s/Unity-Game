@@ -1,7 +1,7 @@
-using System;
+
 using System.Collections;
 using UnityEngine;
-using static UnityEngine.UI.Image;
+
 public class CameraMovement : MonoBehaviour
 {
     [Header("Constants")]

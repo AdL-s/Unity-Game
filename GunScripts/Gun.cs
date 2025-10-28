@@ -1,10 +1,5 @@
-using Mono.Cecil.Cil;
-using System.Runtime.CompilerServices;
-using UnityEditor.PackageManager;
+
 using UnityEngine;
-using UnityEngine.InputSystem.LowLevel;
-using static UnityEngine.GraphicsBuffer;
-using static UnityEngine.ParticleSystem;
 
 public class Gun : MonoBehaviour 
 {

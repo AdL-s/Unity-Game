@@ -29,6 +29,7 @@ public class ParticlesOnImpact : MonoBehaviour
             GameObject tempAudio = new GameObject("TempAudio");
             tempAudio.transform.position = hitPoint;
             AudioSource source = tempAudio.AddComponent<AudioSource>();
+
             source.clip = ImpactSound;
             source.spatialBlend = spatialBlend; // 3D sound
             source.minDistance = soundMinDiastance;

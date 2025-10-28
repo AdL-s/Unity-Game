@@ -22,7 +22,7 @@ public class GunController : MonoBehaviour
 
     void Start()
     {
-
+        mode = gunMode.Revolver;
     }
 
     

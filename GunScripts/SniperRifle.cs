@@ -32,6 +32,10 @@ public class SniperRifle : MonoBehaviour
     [Header("Model and Muzzle")]
     public Transform muzzlePoint;
 
+    [Header("Animation")]
+    public Animation animationComponent;
+    public AnimationClip shootClip;
+
     [Header("VFX")]
     public GameObject hitEffectPrefab;
     public ParticleSystem shootingPS;
@@ -54,6 +58,14 @@ public class SniperRifle : MonoBehaviour
         {
             normalFOV = fov.targetFOV; // Store current FOV as normal
         }
+        if (animationComponent != null && shootClip != null)
+        {
+            animationComponent.AddClip(shootClip, "SniperRifleAnimation");
+            shootClip.legacy = true;
+            shootClip.wrapMode = WrapMode.Once;
+            shootClip.SampleAnimation(gameObject, 0f);
+        }
+
     }
 
     void Update()
@@ -110,10 +122,10 @@ public class SniperRifle : MonoBehaviour
 
     private void OnEnable()
     {
+        shootClip.SampleAnimation(gameObject, 0f);
         StartCoroutine(WaitCoroutine());
 
         // Reset scope when weapon is enabled
-
             isScoped = false;
             fov.targetFOV = normalFOV;
     }
@@ -142,7 +154,12 @@ public class SniperRifle : MonoBehaviour
 
     private void Shoot()
     {
-        // Use static helper instead of inline raycast logic
+        // Play legacy animation
+        if (animationComponent.IsPlaying("SniperRifleAnimation"))
+            animationComponent.Stop("SniperRifleAnimation");
+
+        animationComponent.Play("SniperRifleAnimation");
+
         RayCastsScript.FireRayCastLineRay(
              muzzlePoint, lm, enemyLm,
              hitEffectPrefab,

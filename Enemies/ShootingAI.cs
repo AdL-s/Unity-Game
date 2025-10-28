@@ -43,7 +43,7 @@ public class ShootingAI : MonoBehaviour
 
     void Update()
     {
-        //logic for when ray doesnt hit player to move to position where he can 
+        //logic for when ray does hit wall it moves where he can see player without problem
         RaycastHit hit;
         if (Physics.Raycast(transform.position, player.transform.position, out hit,LayerMask))
         {   
@@ -71,6 +71,7 @@ public class ShootingAI : MonoBehaviour
         {
            if(mAgent.pathStatus == NavMeshPathStatus.PathPartial)
            {
+                LookAtTarget();
                 Shooting();
            }
             mAgent.updateRotation = true; // Re-enable NavMeshAgent rotation for movement
