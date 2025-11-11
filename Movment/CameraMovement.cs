@@ -337,14 +337,18 @@ public class CameraMovement : MonoBehaviour
             Vector3 ray4 = transform.position + transform.up * 0.325f;
             Vector3 ray5 = transform.position + transform.up * 0.65f;
 
-            /*Debug.DrawRay(ray1, direction * rayDistance, Color.red, 0.1f);
+            Debug.DrawRay(ray1, direction * rayDistance, Color.red, 0.1f);
             Debug.DrawRay(ray2, direction * rayDistance, Color.yellow, 0.1f);
             Debug.DrawRay(ray3, direction * rayDistance, Color.green, 0.1f);
             Debug.DrawRay(ray4, direction * rayDistance, Color.cyan, 0.1f);
-            Debug.DrawRay(ray5, direction * rayDistance, Color.blue, 0.1f);*/
+            Debug.DrawRay(ray5, direction * rayDistance, Color.blue, 0.1f);
 
-            bool hit1 = Physics.Raycast(ray1, direction, rayDistance, lm);
-            bool hit2 = Physics.Raycast(ray2, direction, rayDistance, lm);
+            RaycastHit hitInfo1;
+            bool hit1 = Physics.Raycast(ray1, direction, out hitInfo1, rayDistance, lm)
+                        && !hitInfo1.collider.CompareTag("Stairs");
+            RaycastHit hitInfo2;
+            bool hit2 = Physics.Raycast(ray2, direction, out hitInfo2, rayDistance, lm)
+                        && !hitInfo2.collider.CompareTag("Stairs");
             bool hit3 = Physics.Raycast(ray3, direction, rayDistance, lm);
             bool hit4 = Physics.Raycast(ray4, direction, rayDistance, lm);
             bool hit5 = Physics.Raycast(ray5, direction, rayDistance, lm);
@@ -359,14 +363,18 @@ public class CameraMovement : MonoBehaviour
             Vector3 ray4 = transform.position + transform.up * 0.4f;
             Vector3 ray5 = transform.position + transform.up * 0.8f;
 
-            /*Debug.DrawRay(ray1, direction * rayDistance, Color.red, 0.1f);
+            Debug.DrawRay(ray1, direction * rayDistance, Color.red, 0.1f);
             Debug.DrawRay(ray2, direction * rayDistance, Color.yellow, 0.1f);
             Debug.DrawRay(ray3, direction * rayDistance, Color.green, 0.1f);
             Debug.DrawRay(ray4, direction * rayDistance, Color.cyan, 0.1f);
-            Debug.DrawRay(ray5, direction * rayDistance, Color.blue, 0.1f);*/
+            Debug.DrawRay(ray5, direction * rayDistance, Color.blue, 0.1f);
 
-            bool hit1 = Physics.Raycast(ray1, direction, rayDistance, lm);
-            bool hit2 = Physics.Raycast(ray2, direction, rayDistance, lm);
+            RaycastHit hitInfo1;
+            bool hit1 = Physics.Raycast(ray1, direction, out hitInfo1, rayDistance, lm)
+                        && !hitInfo1.collider.CompareTag("Stairs");
+            RaycastHit hitInfo2;
+            bool hit2 = Physics.Raycast(ray2, direction, out hitInfo2, rayDistance, lm)
+                        && !hitInfo2.collider.CompareTag("Stairs");
             bool hit3 = Physics.Raycast(ray3, direction, rayDistance, lm);
             bool hit4 = Physics.Raycast(ray4, direction, rayDistance, lm);
             bool hit5 = Physics.Raycast(ray5, direction, rayDistance, lm);

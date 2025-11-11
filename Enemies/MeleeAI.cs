@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.AI;
 
 [RequireComponent(typeof(NavMeshAgent))]
-public class MelleeAI : MonoBehaviour
+public class MeleeAI : MonoBehaviour
 {
     public Transform Target;
     public float ADistance;
@@ -28,6 +28,17 @@ public class MelleeAI : MonoBehaviour
         triggerRend = AttackCol.GetComponent<Renderer>();
         originalColor = triggerRend.material.color;
         AttackCol.enabled = false;  
+
+        // Find the player by tag at runtime
+        GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
+        if (playerObject != null)
+        {
+            Target = playerObject.transform;
+        }
+        else
+        {
+            Debug.LogError("Player not found! Make sure the player object is tagged with 'Player'.");
+        }
 
         if (AttackCol != null)
         {

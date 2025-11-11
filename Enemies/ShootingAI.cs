@@ -20,7 +20,6 @@ public class ShootingAI : MonoBehaviour
     private bool isAttacking = false;
     private float timer;
 
-    public GameObject player;
     public LayerMask LayerMask = (1 << 0) | (1 << 9);
     [SerializeField] public GameObject bullet;
     [SerializeField] public Transform muzzlePoint;//where the bullets come from
@@ -34,6 +33,18 @@ public class ShootingAI : MonoBehaviour
         mAgent = GetComponent<NavMeshAgent>();
         triggerRend = AttackCol.GetComponent<Renderer>();
         originalColor = triggerRend.material.color;
+        
+        // Find the player by tag at runtime
+        GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
+        if (playerObject != null)
+        {
+            Target = playerObject.transform;
+        }
+        else
+        {
+            Debug.LogError("Player not found! Make sure the player object is tagged with 'Player'.");
+        }
+
         AttackCol.enabled = false;
         if (AttackCol != null)
         {
@@ -43,16 +54,24 @@ public class ShootingAI : MonoBehaviour
 
     void Update()
     {
-        //logic for when ray does hit wall it moves where he can see player without problem
+        if (Target == null) return;
+
+        Vector3 directionToTarget = (Target.position - transform.position).normalized;
+        float distanceToTarget = Vector3.Distance(transform.position, Target.position);
+
+        // Check if there's a wall between AI and player
         RaycastHit hit;
-        if (Physics.Raycast(transform.position, player.transform.position, out hit,LayerMask))
-        {   
-            Debug.DrawRay(transform.position, hit.point);
+        if (Physics.Raycast(transform.position, directionToTarget, out hit, distanceToTarget, LayerMask))
+        {
+            // Draw ray for debugging (green if hits something)
+            Debug.DrawRay(transform.position, directionToTarget * distanceToTarget, Color.green);
+
+            // Wall detected, move to see player
             mAgent.updateRotation = true;
             mAgent.isStopped = false;
             mAgent.destination = Target.position;
             return;
-        } 
+        }
 
         if (Target == null) return;
 
@@ -74,9 +93,6 @@ public class ShootingAI : MonoBehaviour
                 LookAtTarget();
                 Shooting();
            }
-            mAgent.updateRotation = true; // Re-enable NavMeshAgent rotation for movement
-            mAgent.isStopped = false;
-            mAgent.destination = Target.position;
 
             if (m_Distance < ADistance && !isAttacking)
             {
@@ -87,6 +103,9 @@ public class ShootingAI : MonoBehaviour
                 mAgent.isStopped = false;
                 mAgent.destination = Target.position;
             }
+            mAgent.updateRotation = true; // Re-enable NavMeshAgent rotation for movement
+            //mAgent.isStopped = false;
+            //mAgent.destination = Target.position;
         }
     }
 
@@ -116,10 +135,7 @@ public class ShootingAI : MonoBehaviour
         {
             triggerRend.material.color = triggerColor;
             PlayerBasic player = other.GetComponent<PlayerBasic>();
-            if (player != null) // Add null check for safety
-            {
-                player.DamageRecivied(50);
-            }
+            player.DamageRecivied(50);
         }
     }
 
@@ -178,14 +194,18 @@ public class ShootingAI : MonoBehaviour
 
     private IEnumerator Delay()
     {
+
         isAttacking = true;
         mAgent.isStopped = true;
+
         yield return new WaitForSeconds(1);
         AttackCol.enabled = true;
         yield return new WaitForSeconds(3);
         AttackCol.enabled = false;
+
         mAgent.isStopped = false;
         mAgent.destination = Target.position;
+
         isAttacking = false;
     }
 }

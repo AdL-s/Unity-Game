@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using System;
 
 public class PlayerBasic : MonoBehaviour
 {   
@@ -8,6 +9,8 @@ public class PlayerBasic : MonoBehaviour
 
     public float currentHealth;
     public Image healthBarFill;
+
+    public event Action DeathCall;
     
     void Start()
     {
@@ -33,7 +36,8 @@ public class PlayerBasic : MonoBehaviour
         Debug.Log("Took damage");
     }
     private void Death()
-    {
+    {   
+        DeathCall?.Invoke(); 
         transform.position = new Vector3(2.556f, 2.998f, 0.966f);
         Debug.Log("Death");
         currentHealth = 100;

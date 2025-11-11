@@ -27,10 +27,20 @@ public class SMGScript : MonoBehaviour
 
     [Header("VFX")]
     public ParticleSystem shootingPS;
+    
+    [Header("Animation")]
+    public Animation animationComponent;
+    public AnimationClip shootClip;
 
     void Start()
     {
-      
+        if (animationComponent != null && shootClip != null)
+        {
+            animationComponent.AddClip(shootClip, "SniperRifleAnimation");
+            shootClip.legacy = true;
+            shootClip.wrapMode = WrapMode.Once;
+            shootClip.SampleAnimation(gameObject, 0f);
+        }
     }
 
     void Update()
@@ -52,6 +62,10 @@ public class SMGScript : MonoBehaviour
 
     private void Shoot()
     {
+        if (animationComponent.IsPlaying("SniperRifleAnimation"))
+            animationComponent.Stop("SniperRifleAnimation");
+
+        animationComponent.Play("SniperRifleAnimation");
         // Call the static utility function instead of duplicating raycast logic
         RayCastsScript.FireRayCast(
             audioSource, fireSound,
@@ -75,7 +89,10 @@ public class SMGScript : MonoBehaviour
 
     private void OnEnable()
     {
+        shootClip.SampleAnimation(gameObject, 0f);
         StartCoroutine(WaitCoroutine());
+        StartCoroutine(WaitCoroutine());
+
     }
 
     private IEnumerator WaitCoroutine()
