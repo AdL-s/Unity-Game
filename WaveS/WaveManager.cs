@@ -26,7 +26,6 @@ public class WaveManager : MonoBehaviour
     void Start()
     {
         // Start the first wave after a short delay
-        
         StartCoroutine(SpawnWaveCoroutine());
     }
 
@@ -52,7 +51,6 @@ public class WaveManager : MonoBehaviour
         {
             WaveData currentWave = waves[currentWaveIndex];
             yield return new WaitForSeconds(currentWave.delayBeforeWave);
-
             Debug.Log("Spawning Wave: " + currentWave.waveName);
 
             foreach (Transform spawnPoint in currentWave.spawnPoints)
@@ -74,9 +72,7 @@ public class WaveManager : MonoBehaviour
                     continue; // Skip this spawn point
                 }
 
-
                 GameObject enemyPrefab = GetEnemyPrefabForTag(spawnTag);
-
                 if (enemyPrefab != null)
                 {
                     Instantiate(enemyPrefab, spawnPoint.position, spawnPoint.rotation);
